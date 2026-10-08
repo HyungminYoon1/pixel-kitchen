@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="사진과 픽셀을 직접 가공하는 브라우저 이미지 실험실. 필터와 3×3 행렬을 바꾸고 계산 과정을 살펴보세요." />
+  <meta name="theme-color" content="#242424" /><meta name="referrer" content="no-referrer" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; connect-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none'" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23242424'/%3E%3Cpath d='M6 6h9v9H6zm11 0h9v9h-9zM6 17h9v9H6zm11 0h9v9h-9z' fill='%23ff813a'/%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="styles.css" /><script type="module" src="src/app.js"></script><title>PIXEL KITCHEN — 이미지 가공실</title>
+</head>
+<body>
+  <header><a class="logo" href="./"><span class="mark">P×</span>PIXEL KITCHEN</a><nav><a href="https://hyungminyoon1.github.io/web-lab/">WEB LAB</a><a href="https://github.com/HyungminYoon1/pixel-kitchen" target="_blank" rel="noopener noreferrer">코드</a></nav></header>
+  <main>
+    <section class="work-title"><div><p class="eyebrow">IMAGE / PIXEL / CONVOLUTION</p><h1>사진을 픽셀부터 요리하기.</h1><p>필터를 고르고, 숫자를 바꾸고, 이미지의 한 점을 눌러보세요.</p></div><div class="file-actions"><label class="file-button" for="image-file">내 사진 열기<input id="image-file" type="file" accept="image/png,image/jpeg,image/webp" /></label><button id="sample">샘플 복원</button><button class="primary" id="export">PNG 저장</button></div></section>
+    <p class="status" id="status" role="status">사진은 이 브라우저 안에서만 처리됩니다. PNG·JPEG·WebP, 최대 8 MB.</p>
+    <div class="desk">
+      <aside class="recipe">
+        <h2>01 / 필터 레시피</h2><div class="presets" id="presets"></div>
+        <label class="check"><input type="checkbox" id="gray" /> 흑백으로 계산</label>
+        <h2>02 / 직접 만든 3×3 필터</h2><div class="kernel" id="kernel"></div>
+        <div class="number-row"><label>나누기<input id="divisor" type="number" min="0.1" max="64" step="0.1" value="1" /></label><label>밝기 더하기<input id="bias" type="number" min="-255" max="255" step="1" value="0" /></label></div>
+        <button class="wide" id="custom">내 필터 적용</button><p class="small">주변 9개 픽셀에 각 숫자를 곱해 더한 뒤, 나누기와 밝기를 적용합니다.</p>
+      </aside>
+      <section class="image-work" aria-label="원본과 가공 결과">
+        <div class="canvases"><figure><figcaption><strong>원본</strong><span id="dimensions"></span></figcaption><canvas id="original" width="600" height="400" aria-label="원본 이미지"></canvas></figure><figure><figcaption><strong>가공 결과</strong><span id="filter-label"></span></figcaption><canvas id="result" width="600" height="400" tabindex="0" aria-label="가공 이미지. 클릭하거나 방향키로 검사할 픽셀을 선택하세요."></canvas></figure></div>
+        <div class="inspector"><div class="inspect-heading"><h2>03 / 한 픽셀의 계산</h2><span id="coordinate"></span></div><div class="inspect-body"><div class="neighborhood" id="neighborhood"></div><div><p class="formula" id="formula"></p><p id="rgb-result"></p><p class="small">가공 결과를 누르면 주변 값과 계산 결과를 확인합니다. 방향키로 픽셀을 이동할 수도 있습니다.</p></div></div></div>
+      </section>
+    </div>
+    <footer><span>PIXEL KITCHEN / LOCAL IMAGE WORKSPACE</span><a href="https://setosa.io/ev/image-kernels/" target="_blank" rel="noopener noreferrer">이미지 커널 원리 읽기</a></footer>
+  </main>
+</body></html>

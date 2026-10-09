@@ -18,9 +18,21 @@ async function walk(dir) {
     if(e.name.endsWith(".js")) {
       execFileSync(process.execPath,["--check",p],{stdio:"inherit"});
       const js=await readFile(p,"utf8");
-      assert(!/\b(?:fetch|XMLHttpRequest|WebSocket|localStorage|sessionStorage|indexedDB|eval)\s*(?:\(|\.)/.test(js),"Unexpected network, persistence or eval API");
+      assert(!/\b(?:fetch|XMLHttpRequest|WebSocket|EventSource|sendBeacon|sessionStorage|indexedDB|eval)\b/.test(js),"Unexpected network, persistence or eval API");
+      if(e.name!=="storage.js")assert(!/\blocalStorage\b/.test(js),"Persistence must stay in storage.js");
+      else {
+        // D09: only this fixed-key adapter may retain validated image-free settings.
+        assert.equal((js.match(/globalThis\.localStorage/g)||[]).length,1,"Unexpected storage access");
+        assert(js.includes('PRESET_KEY="pixel-kitchen-presets-v1"'),"Unexpected persistence key");
+        assert(!/\bclear\s*\(|web-lab-progress|cookie|\.data\b/.test(js),"Storage scope/privacy boundary broken");
+        for(const match of js.matchAll(/storage\.(getItem|setItem|removeItem)\(([^,)]+)/g))assert.equal(match[2],"PRESET_KEY","Dynamic storage key");
+        assert(js.includes("parsePresets(text)")&&js.includes("validatePresets(state)"),"Storage schema validation missing");
+      }
       for(const [,ref] of js.matchAll(/\bfrom\s+"(\.\/[^"\n]+)"/g)) await readFile(resolve(dirname(p),ref));
-      if(["model.js","challenges.js"].includes(e.name)) assert(!/\b(?:document|window|navigator|ImageData|setTimeout|performance)\b/.test(js),"Pure calculation boundary broken");
+      if(["model.js","challenges.js","recipe.js"].includes(e.name)) {
+        assert(!/\b(?:document|window|navigator|ImageData|setTimeout|performance|Date|globalThis)\b/.test(js),"Pure calculation boundary broken");
+        assert(!/from\s+"\.\/(?:app|ui|storage)\.js"/.test(js),"Pure model imports an adapter");
+      }
     }
     if(!e.name.endsWith(".html")) continue;
     const html=await readFile(p,"utf8");

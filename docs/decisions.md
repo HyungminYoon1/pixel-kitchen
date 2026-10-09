@@ -71,3 +71,30 @@
 - Rationale: a BFCache document needs working data after pagehide cleanup, but retaining/recovering private photos would exceed the transient-data boundary. Explicit reinitialization is small and avoids a new request/reload loop. Keeping/closing the iterator also releases suspended calculation buffers; version checks stop late work from changing the new workspace.
 - Affected: dist/src/app.js, tools/browser-bfcache.js, README.md, docs/decisions.md, docs/verification.md. Only ignored output/playwright/bfcache.config.json changes the test browser's default flag; no server/helper or other app changes.
 - Review: real local-link BFCache roundtrips and imported synthetic PNG disposal are verified; the in-flight cancellation case uses controlled scheduling and is labelled a test double. Native pending decode still obeys one-decoder/version/close rules; no forced decoder abort or secure memory erasure is claimed. Firefox/WebKit and live deployment remain NOT_RUN.
+
+## D09 — Explicit bounded settings persistence / 2026-10-09
+
+- Context: user explicitly authorizes recipe JSON interchange and local saved presets, while prohibiting image bytes/file paths and retaining pure models/no network. This supersedes only D02/D06/D07's blanket prohibition on persistence; pixel lifecycle/privacy rules remain.
+- Options: image/history snapshots; arbitrary named user records; strictly typed numbered filter settings at one device-local key.
+- Decision: pure recipe.js validates v1/model tag, exact fields and stage/model bounds; 8 KiB recipes, max 4 stages. storage.js exclusively reads/writes pixel-kitchen-presets-v1, exact versioned envelope, max 8 numbered slots/64 KiB. No names, seeds, pixel/file data or timestamps. Validate before write/application, check current-image 40M budget before replacing settings, and clone values. Save/import/load/export work only in the free lab; deletion remains accessible everywhere. Explicit deletion/erase, corrupt-data recovery and storage failures are visible. No automatic saves or expiry. Concurrent tabs use last successful write and refresh via storage events.
+- Rationale: reusable settings require no retained image/profile. A fixed schema and key make the exception reviewable while excluding private file metadata and unknown payloads.
+- Affected: dist/src/recipe.js, storage.js, app.js, dist/index.html, tools/check.mjs, test/recipe.test.js, architecture.md, README.md.
+- Review: version the model tag if byte semantics change. Do not infer image work eligibility from image-free validation alone. Browser storage may be denied/evicted; user controls clear only this app's preset key. Presets are not encrypted or multi-tab transactions; no account/cloud storage is introduced.
+
+## D10 — No durable gallery achievement record
+
+- Context: approved cross-app key web-lab-progress-v1 may summarize actual durable independent achievements only; initial/example/import processing must not count.
+- Options: invent completion for recipe/import actions; persist a new challenge campaign; leave the app without a completion summary.
+- Decision: preserve the existing transient five-objective campaign. Do not publish/read a gallery summary, since no durable independent achievements are implemented. No generic summary writer/whitelist copy is necessary for this app. Preset erase never touches the gallery key or other repositories.
+- Rationale: saving a setting is not solving an objective. Adding achievement retention is unnecessary for this settings-focused request and would alter campaign lifecycle.
+- Affected: architecture.md, docs/decisions.md, README.md, test/recipe.test.js (cross-app erase isolation).
+- Review: if achievement persistence is separately introduced, derive counts from validated real passes and adopt the main integration allowlist/contract. No ranking.
+
+## D11 — Actual histogram and concise controls
+
+- Context: user asks for useful mobile preview/histogram controls and removal of marketing/repeated UI wording, retaining objectives/privacy/provenance.
+- Options: decorative distribution; statistics from cached stale output; bounded pure bins from current source/target/selected output.
+- Decision: add true 256-bin gray/R/G/B/alpha histograms, explicit image/channel selectors, transparent-pixel semantics and text counts. Clear pending output distributions. Preview selection and mobile execution use the existing calculation; mobile previews precede editor controls. Shorten headings/filter names/status text while keeping constraints, formulas, image privacy and error semantics. Keep five targets, tolerances, legal solution inputs and seed algorithm unchanged.
+- Rationale: current computed pixels provide useful comparisons without fictional state, added network or user-data retention.
+- Affected: dist/src/model.js, challenges.js, app.js, dist/index.html, styles.css, test/recipe.test.js, browser QA selectors.
+- Review: main agent owns browser interaction/screenshots and live integration. Pure histogram tests do not establish mobile-device layout/performance.

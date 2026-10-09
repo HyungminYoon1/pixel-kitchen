@@ -6,6 +6,7 @@ async page => {
   const onError=error=>errors.push(error.message);page.on("pageerror",onError);
   const settled=()=>page.waitForFunction(()=>!document.querySelector("#run").disabled&&document.querySelector("#result-label").textContent.startsWith("최종"));
   const entry=page.url(),origin=new URL(entry).origin;
+  const initialStorage=await page.evaluate(()=>JSON.stringify(Object.fromEntries(Object.keys(localStorage).sort().map(key=>[key,localStorage.getItem(key)]))));
   const observe=()=>page.evaluate(()=>{
     window.qaBfcache={events:[],cleared:false};
     addEventListener("pagehide",event=>{
@@ -41,7 +42,7 @@ async page => {
     // Visible seed editing is allowed; a blank pending seed must not break return.
     await page.getByRole("spinbutton",{name:"재현 시드",exact:true}).fill("");
     await roundtrip("challenge");
-    await page.getByRole("button",{name:"추론 단서 보기",exact:true}).click();
+    await page.getByRole("button",{name:"단서",exact:true}).click();
     assert((await page.locator("#hint-text").innerText()).length>0,"hint button works after back");
     await page.getByRole("spinbutton",{name:"밝기 더하기",exact:true}).fill("12");
     await page.getByRole("button",{name:"파이프라인 실행",exact:true}).click();await settled();
@@ -67,7 +68,7 @@ async page => {
     await page.waitForTimeout(30);
     await page.getByRole("button",{name:"파이프라인 실행",exact:true}).click();await settled();
     assert(!(await page.locator("#export").isDisabled()),"old calculation cannot disable fresh workspace");
-    assert(await page.evaluate(()=>localStorage.length===0&&sessionStorage.length===0&&document.cookie===""),"no browser storage retention");
+    assert(await page.evaluate(before=>JSON.stringify(Object.fromEntries(Object.keys(localStorage).sort().map(key=>[key,localStorage.getItem(key)])))===before&&sessionStorage.length===0&&document.cookie==="",initialStorage),"no image/progress retention; existing presets/other keys unchanged");
     assert(errors.length===0,"no uncaught page errors in fixed roundtrips");
     return {evidence:"BROWSER_LOCAL actual BFCache with default disabling flag removed; in-flight row scheduling is a test double",count:checks.length,checks,errors};
   }finally {page.off("pageerror",onError);}

@@ -1,19 +1,19 @@
 import {kernelStage,runPipeline,validatePipeline,compareImages} from "./model.js";
 
 export const objectives=Object.freeze([
-  {title:"01 / 평탄부의 단서",maxPasses:1,allowed:["kernel"],mae:.25,rmse:.5,
+  {title:"01 / 밝기",maxPasses:1,allowed:["kernel"],mae:.25,rmse:.5,
     brief:"한 번의 밝기 이동을 복원하세요. 중앙 계수 1, 나누기 1, 흑백 끔. 밝기 0–48만 바꿀 수 있습니다.",
     hint:"평탄한 곳의 원본과 목표 RGB를 비교하세요. 경계의 모양이 그대로라면 주변 계수는 필요 없습니다."},
-  {title:"02 / 점이 퍼지는 모양",maxPasses:1,allowed:["kernel"],mae:.5,rmse:1,
+  {title:"02 / 평균 커널",maxPasses:1,allowed:["kernel"],mae:.5,rmse:1,
     brief:"양수 3×3 평균 커널을 복원하세요. 계수 합 = 나누기, 밝기 0, 흑백 끔. 한 단계로 끝내세요.",
     hint:"밝은 점 주변의 퍼짐을 검사하세요. 모서리·변·중앙의 비율이 다릅니다. [1, m, 1]의 세로·가로 곱으로 대칭 평균을 만들 수 있습니다. m은 시드마다 다릅니다."},
-  {title:"03 / 부호가 말하는 방향",maxPasses:2,allowed:["kernel","sobel"],mae:.6,rmse:1.5,
+  {title:"03 / 방향 Sobel",maxPasses:2,allowed:["kernel","sobel"],mae:.6,rmse:1.5,
     brief:"평균 커널 → 방향 Sobel, 정확히 두 단계입니다. 목표의 회색 128은 변화가 없는 곳입니다. 방향과 증폭을 추론하세요.",
     hint:"X는 좌우 변화, Y는 상하 변화입니다. 밝아지는 경계와 어두워지는 경계의 부호를 보세요. 먼저 잡음을 평균으로 줄이세요."},
-  {title:"04 / 순서는 교환되지 않는다",maxPasses:2,allowed:["kernel","threshold"],mae:.6,rmse:1.5,
+  {title:"04 / 문턱값과 평균",maxPasses:2,allowed:["kernel","threshold"],mae:.6,rmse:1.5,
     brief:"평균 커널과 문턱값을 각각 한 번 씁니다. 순서는 직접 정하세요. 목표 가장자리의 중간 회색을 설명해야 합니다.",
     hint:"문턱값이 마지막이면 결과는 0 또는 255뿐입니다. 목표에 중간 회색이 있으면 순서를 다시 생각하세요."},
-  {title:"05 / 경계 지도 조립",maxPasses:4,allowed:["kernel","sobel","threshold"],mae:.8,rmse:2,
+  {title:"05 / 경계 지도",maxPasses:4,allowed:["kernel","sobel","threshold"],mae:.8,rmse:2,
     brief:"평균 2회, Sobel 크기 1회, 문턱값 1회를 조립하세요. 정확히 네 단계. 잡음 억제·경계 검출·선택·펴기 순서를 추론하세요.",
     hint:"크기는 √(Gx²+Gy²)입니다. 가는 잡음 선이 많으면 Sobel 앞 평균, 선 끝이 계단이면 문턱값 뒤 평균을 검토하세요."}
 ]);
@@ -61,9 +61,9 @@ export function constraintFailure(challenge,stages) {
 export function assessChallenge(challenge,stages,output,previousMae=null) {
   const metrics=compareImages(output,challenge.target),constraint=constraintFailure(challenge,stages),o=challenge.objective;
   const passed=!constraint&&metrics.mae<=o.mae&&metrics.rmse<=o.rmse&&metrics.alphaMae===0;
-  let feedback=constraint|| (passed?"허용 연산과 두 오차 기준을 충족했습니다. 같은 규칙을 다음 과제에 적용해 보세요.":
-    Math.abs(metrics.bias)>3?`평균 부호 오차 ${metrics.bias.toFixed(2)}: 양수는 목표보다 밝음, 음수는 어두움입니다. 평탄부와 밝기·증폭부터 검사하세요.`:
-    "평탄부보다 경계의 차이가 큰지 차이 지도를 보세요. 평균 비율·Sobel 방향·문턱값·단계 순서를 한 번에 하나씩 바꿔 비교하세요.");
+  let feedback=constraint|| (passed?"연산·오차 기준 충족":
+    Math.abs(metrics.bias)>3?`부호 평균 ${metrics.bias.toFixed(2)} · 양수: 목표보다 밝음 · 음수: 어두움. 밝기·증폭을 확인하세요.`:
+    "평균 비율·Sobel 방향·문턱값·순서를 차이 지도와 비교하세요.");
   if(previousMae!==null&&!passed)feedback+=` 이전 시도 대비 MAE ${metrics.mae<previousMae?"감소":"증가 또는 동일"} (${(metrics.mae-previousMae).toFixed(3)}).`;
   return {metrics,passed,feedback};
 }

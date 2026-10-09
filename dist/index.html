@@ -11,25 +11,26 @@
 <body>
   <header><a class="logo" href="./"><span class="mark">P×</span>PIXEL KITCHEN</a><nav><a href="https://hyungminyoon1.github.io/web-lab/">WEB LAB</a><a href="https://github.com/HyungminYoon1/pixel-kitchen" target="_blank" rel="noopener noreferrer">코드</a></nav></header>
   <main>
-    <section class="work-title"><div><p class="eyebrow">RECONSTRUCT / COMPOSE / MEASURE</p><h1>결과에서 레시피를 추론하기.</h1><p>점이 퍼지는 모양, 경계의 부호, 연산의 순서. 픽셀로 가설을 검증하세요.</p></div><div class="file-actions"><label class="file-button" for="image-file">내 사진 열기<input id="image-file" type="file" accept="image/png,image/jpeg,image/webp" /></label><button id="sample">샘플 복원</button><button class="primary" id="export" disabled>최종 PNG 저장</button></div></section>
-    <div class="import-status"><p class="status" id="status" role="status">사진은 이 브라우저 안에서만 처리됩니다. PNG·JPEG·WebP, 최대 8 MB.</p><button id="cancel-import" disabled>사진 읽기 취소</button></div>
+    <section class="work-title"><div><h1>이미지 필터</h1></div><div class="file-actions"><label class="file-button" for="image-file">이미지 열기<input id="image-file" type="file" accept="image/png,image/jpeg,image/webp" /></label><button id="sample">샘플 복원</button><button class="primary" id="export" disabled>최종 PNG 저장</button></div></section>
+    <p class="small">이미지는 업로드·저장되지 않습니다. PNG·JPEG·WebP ≤ 8 MiB. 프리셋에는 필터 설정만 저장됩니다.</p>
+    <div class="import-status"><p class="status" id="status" role="status">준비 중…</p><button id="cancel-import" disabled>사진 읽기 취소</button></div>
     <section class="challenge-bar" aria-label="실험 모드와 복원 과제">
-      <label>작업 모드<select id="mode"><option value="challenge">복원 과제</option><option value="lab">자유 처리 실험실</option></select></label>
+      <label>작업 모드<select id="mode"><option value="challenge">복원 과제</option><option value="lab">자유 실험</option></select></label>
       <div id="challenge-panel">
         <div class="challenge-controls"><label>진행 단계<select id="level"></select></label><label>재현 시드<input id="seed" type="number" min="0" max="999999" step="1" value="17" /></label><button id="new-seed">시드로 처음부터</button><button id="next" disabled>다음 과제 →</button></div>
-        <p class="small" id="seed-label"></p><p id="brief"></p><p class="small" id="goal"></p><button id="hint">추론 단서 보기</button><p class="small" id="hint-text"></p>
+        <p class="small" id="seed-label"></p><p id="brief"></p><p class="small" id="goal"></p><button id="hint">단서</button><p class="small" id="hint-text"></p>
       </div>
     </section>
     <div class="desk">
       <aside class="recipe">
-        <div class="inspect-heading"><h2>01 / 처리 순서</h2><span id="stage-count"></span></div>
+        <div class="inspect-heading"><h2>처리 순서</h2><span id="stage-count"></span></div>
         <div id="stage-list" class="stage-list" aria-label="편집할 처리 단계"></div>
         <div class="stage-actions"><button id="up" aria-label="단계 위로">↑</button><button id="down" aria-label="단계 아래로">↓</button><button id="remove">단계 삭제</button></div>
         <label>추가할 연산<select id="add-kind"><option value="kernel">3×3 커널</option><option value="sobel">Sobel 기울기</option><option value="threshold">문턱값</option></select></label>
         <div class="stage-actions"><button id="add">단계 추가</button><button id="reset-pipeline">순서 초기화</button></div>
         <section id="editor" aria-label="현재 단계 설정">
           <h2 id="editor-title"></h2><p class="small" id="draft-label"></p>
-          <div id="kernel-editor"><div class="presets" id="presets"></div><label class="check"><input type="checkbox" id="gray" /> 이 단계 입력을 흑백으로</label><div class="kernel" id="kernel"></div>
+          <div id="kernel-editor"><div class="presets" id="presets"></div><label class="check"><input type="checkbox" id="gray" /> 흑백 입력</label><div class="kernel" id="kernel"></div>
             <div class="number-row"><label>나누기<input id="divisor" type="number" min="0.1" max="64" step="0.1" value="1" required /></label><label>밝기 더하기<input id="bias" type="number" min="-255" max="255" step="1" value="0" required /></label></div>
             <button id="normalize">계수 합을 나누기로</button><p class="small" id="kernel-info"></p><p class="small">Σ(이웃 × 계수) / 나누기 + 밝기. 단계마다 0–255로 반올림·제한합니다.</p>
           </div>
@@ -38,15 +39,23 @@
           <button id="custom" class="wide">단계 설정 적용</button>
         </section>
         <div class="run-actions"><button id="run" class="primary">파이프라인 실행</button><button id="cancel" disabled>계산 취소</button></div><p class="small" id="progress"></p>
-        <p class="small">최대 4단계 · 40M 연산 예산. 사진은 메모리에만 유지하며, 최대 720×480으로 처리합니다.</p>
+        <p class="small">최대 4단계 · 720×480 · 계산 예산 40M.</p>
+        <section class="saved-recipes" aria-label="레시피와 저장 프리셋"><h2>레시피</h2><p class="small">자유 실험의 설정만 저장합니다. 최대 8개.</p>
+          <div class="stage-actions"><button id="recipe-export">JSON 내보내기</button><label class="file-button" for="recipe-file">JSON 가져오기<input id="recipe-file" type="file" accept=".json,application/json" /></label></div>
+          <button id="preset-save">현재 설정 저장</button><label>저장 프리셋<select id="saved-presets"></select></label>
+          <div class="stage-actions"><button id="preset-load">불러오기</button><button id="preset-delete">선택 삭제</button><button id="preset-erase">전체 삭제</button></div>
+          <p class="small" id="preset-status" role="status"></p>
+        </section>
       </aside>
       <section class="image-work" aria-label="원본과 가공 결과">
-        <div class="canvases"><figure><figcaption><strong>원본</strong><span id="dimensions"></span></figcaption><canvas id="original" width="192" height="128" aria-label="원본 이미지"></canvas></figure><figure id="target-figure"><figcaption><strong>복원할 목표</strong><span>시드로 합성한 정답 이미지</span></figcaption><canvas id="target" width="192" height="128" tabindex="0" aria-label="목표 이미지. 픽셀 선택"></canvas></figure><figure><figcaption><strong>최종 가공 결과</strong><span id="result-label"></span></figcaption><canvas id="result" width="192" height="128" tabindex="0" aria-label="가공 이미지. 클릭하거나 방향키로 검사할 픽셀을 선택하세요."></canvas></figure><figure id="heat-figure"><figcaption><strong>실제 차이 지도</strong><label>증폭<select id="heat-gain"><option value="1">1×</option><option value="4" selected>4×</option><option value="16">16×</option></select></label></figcaption><canvas id="heatmap" width="192" height="128" aria-label="목표와 최종 결과의 차이 지도"></canvas><p class="small">검정 = 차이 0. 빨강 = 최대 채널 차이 × 증폭, 초록 = 증폭 전 차이. 지도 증폭은 점수를 바꾸지 않습니다.</p></figure></div>
-        <section class="scoreboard" aria-label="계산 오차"><p id="metrics" role="status"></p><p id="feedback"></p><p class="small">MAE: 절대 오차 평균 · RMSE: 제곱 평균의 제곱근. RGB 바이트 기준이며, 둘 다 완전 투명인 픽셀은 RGB에서 제외합니다. 알파 오차는 별도 계산. 지각 품질·통계 검증 점수가 아닙니다.</p></section>
-        <section class="compare-work" aria-label="와이프와 중간 단계 비교"><h2>02 / 경계와 중간 단계 비교</h2><div class="compare-controls"><label>왼쪽 기준<select id="reference"><option value="source">원본</option><option id="reference-target" value="target">목표</option></select></label><label>오른쪽 결과<select id="compare-stage"></select></label></div><canvas id="comparison" width="192" height="128" tabindex="0" aria-label="좌우 와이프 비교. 클릭 또는 방향키로 픽셀 선택"></canvas><label class="wipe-label">비교 경계<input id="wipe" type="range" min="0" max="100" value="50" /></label><p class="small" id="compare-label"></p></section>
-        <div class="inspector"><div class="inspect-heading"><h2>03 / 한 픽셀의 계산</h2><span id="coordinate"></span></div><p id="inspect-stage" class="small"></p><div class="inspect-body"><div class="neighborhood" id="neighborhood"></div><div><p class="formula" id="formula"></p><p id="rgb-result"></p><p class="small">처리 순서에서 검사할 단계를 선택하세요. 그 단계의 실제 입력·출력을 계산합니다. 방향키로 픽셀 이동. 경계는 끝 픽셀 반복, 알파는 유지합니다. 커널은 비선형 sRGB 바이트에 적용하며 투명 픽셀의 RGB도 이웃 계산에 포함됩니다.</p></div></div></div>
+        <div class="preview-controls"><label>화면<select id="preview-view"><option value="all">전체</option><option value="original">원본</option><option value="target">목표</option><option value="result">결과</option><option value="heat">차이 지도</option><option value="comparison">좌우 비교</option></select></label><button id="preview-run" class="primary">실행</button></div>
+        <div class="canvases"><figure data-view="original"><figcaption><strong>원본</strong><span id="dimensions"></span></figcaption><canvas id="original" width="192" height="128" aria-label="원본 이미지"></canvas></figure><figure id="target-figure" data-view="target"><figcaption><strong>목표</strong><span>합성 이미지</span></figcaption><canvas id="target" width="192" height="128" tabindex="0" aria-label="목표 이미지. 픽셀 선택"></canvas></figure><figure data-view="result"><figcaption><strong>결과</strong><span id="result-label"></span></figcaption><canvas id="result" width="192" height="128" tabindex="0" aria-label="결과. 클릭 또는 방향키로 픽셀 선택"></canvas></figure><figure id="heat-figure" data-view="heat"><figcaption><strong>차이 지도</strong><label>증폭<select id="heat-gain"><option value="1">1×</option><option value="4" selected>4×</option><option value="16">16×</option></select></label></figcaption><canvas id="heatmap" width="192" height="128" aria-label="목표와 결과의 차이 지도"></canvas><p class="small">검정: 차이 0 · 빨강: 최대 차이 × 증폭 · 초록: 최대 차이.</p></figure></div>
+        <section class="scoreboard" aria-label="계산 오차"><p id="metrics" role="status"></p><p id="feedback"></p><p class="small">RGB 바이트 오차. MAE: 절대 오차 평균 · RMSE: 제곱 평균의 제곱근. 양쪽이 완전 투명인 픽셀은 제외하며 α는 별도 비교합니다.</p></section>
+        <section class="compare-work" data-view="comparison" aria-label="와이프와 중간 단계 비교"><h2>좌우 비교</h2><div class="compare-controls"><label>왼쪽 기준<select id="reference"><option value="source">원본</option><option id="reference-target" value="target">목표</option></select></label><label>오른쪽 결과<select id="compare-stage"></select></label></div><canvas id="comparison" width="192" height="128" tabindex="0" aria-label="좌우 비교. 클릭 또는 방향키로 픽셀 선택"></canvas><label class="wipe-label">비교 경계<input id="wipe" type="range" min="0" max="100" value="50" /></label><p class="small" id="compare-label"></p></section>
+        <section class="histogram-work" aria-label="픽셀 히스토그램"><h2>히스토그램</h2><div class="compare-controls"><label>이미지<select id="hist-source"><option value="source">원본</option><option value="target">목표</option><option value="result" selected>오른쪽 결과 단계</option></select></label><label>채널<select id="hist-channel"><option value="gray">밝기</option><option value="r">R</option><option value="g">G</option><option value="b">B</option><option value="alpha">α</option></select></label></div><canvas id="histogram" width="512" height="128" role="img" aria-label="0–255 픽셀 분포"></canvas><p class="small" id="hist-label" role="status"></p><p class="small">0 → 255 · RGB/밝기는 완전 투명 픽셀 제외 · α는 전체 픽셀.</p></section>
+        <div class="inspector"><div class="inspect-heading"><h2>픽셀 검사</h2><span id="coordinate"></span></div><p id="inspect-stage" class="small"></p><div class="inspect-body"><div class="neighborhood" id="neighborhood"></div><div><p class="formula" id="formula"></p><p id="rgb-result"></p><p class="small">단계 선택 후 클릭·방향키로 검사합니다. 경계는 끝 픽셀 반복, α는 유지합니다. 커널은 sRGB 바이트와 투명 픽셀의 RGB를 사용합니다.</p></div></div></div>
       </section>
     </div>
-    <footer><span>PIXEL KITCHEN / LOCAL IMAGE WORKSPACE</span><a href="https://setosa.io/ev/image-kernels/" target="_blank" rel="noopener noreferrer">이미지 커널 원리 읽기</a></footer>
+    <footer><span>PIXEL KITCHEN</span><a href="https://setosa.io/ev/image-kernels/" target="_blank" rel="noopener noreferrer">커널 원리</a></footer>
   </main>
 </body></html>

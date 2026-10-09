@@ -25,7 +25,7 @@ async (page) => {
   await page.waitForFunction(()=>typeof window.qaRelease==="function");
   assert(!(await page.getByRole("button",{name:"사진 읽기 취소",exact:true}).isDisabled()),"pending decode can be explicitly cancelled");
   await page.locator("#image-file").setInputFiles({name:"second.png",mimeType:"image/png",buffer:Buffer.from(fixtures[0].data,"base64")});
-  assert((await page.locator("#status").innerText()).includes("이미 사진"),"only one decoder in flight");
+  assert((await page.locator("#status").innerText()).includes("진행 중"),"only one decoder in flight");
   await page.getByRole("button",{name:"사진 읽기 취소",exact:true}).click();
   assert((await page.locator("#status").innerText()).includes("취소"),"explicit import cancellation feedback");
   await page.getByRole("button",{name:"샘플 복원",exact:true}).click();await settled();

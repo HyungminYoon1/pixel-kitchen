@@ -3,6 +3,8 @@
 async (page) => {
   const root="C:/Users/yhm19/OneDrive/바탕 화면/2025-2027 서울사이버대 학습 관련/GitHub-Pages-실험/pixel-kitchen/output/playwright";
   const origin=new URL(page.url()).origin;
+  // D09 permits explicit presets; this flow must not automatically change storage.
+  const initialStorage=await page.evaluate(()=>JSON.stringify(Object.fromEntries(Object.keys(localStorage).sort().map(key=>[key,localStorage.getItem(key)]))));
   const checks=[],errors=[],requests=[];
   const assert=(ok,label)=>{if(!ok)throw new Error(label);checks.push(label);};
   page.on("pageerror",error=>errors.push(error.message));
@@ -82,7 +84,7 @@ async (page) => {
   const comparison=page.locator("#comparison"),position=await comparison.evaluate(el=>({x:el.clientLeft+el.clientWidth*.25,y:el.clientTop+el.clientHeight*.25}));
   await comparison.click({position});assert((await page.locator("#coordinate").innerText())==="x 150 / y 100","fractional viewport pointer selects correct pixel cell");
   assert(requests.every(url=>url.startsWith(origin+"/")),"only local static requests");
-  assert(await page.evaluate(()=>localStorage.length===0&&sessionStorage.length===0&&document.cookie===""),"no app persistence");
+  assert(await page.evaluate(before=>JSON.stringify(Object.fromEntries(Object.keys(localStorage).sort().map(key=>[key,localStorage.getItem(key)])))===before&&sessionStorage.length===0&&document.cookie==="",initialStorage),"no automatic persistence / cookies / session storage");
   assert(errors.length===0,"no console errors / uncaught exceptions");
   return {evidence:"BROWSER_LOCAL Chromium desktop + viewport emulation",count:checks.length,checks,errors,requests};
 }

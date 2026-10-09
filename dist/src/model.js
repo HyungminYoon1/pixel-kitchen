@@ -1,8 +1,8 @@
 // Pure byte-domain calculations: no DOM, IO, storage or scheduler.
 export const MAX_PIXELS=360000, MAX_PASSES=4, MAX_WORK=40000000;
 export const recipes=Object.freeze(Object.fromEntries(Object.entries({
-  identity:{name:"그대로",kernel:[0,0,0,0,1,0,0,0,0],divisor:1,bias:0},
-  sharpen:{name:"선명하게",kernel:[0,-1,0,-1,5,-1,0,-1,0],divisor:1,bias:0},
+  identity:{name:"항등",kernel:[0,0,0,0,1,0,0,0,0],divisor:1,bias:0},
+  sharpen:{name:"샤프닝",kernel:[0,-1,0,-1,5,-1,0,-1,0],divisor:1,bias:0},
   blur:{name:"박스 평균",kernel:[1,1,1,1,1,1,1,1,1],divisor:9,bias:0},
   gaussian:{name:"가우시안 3×3",kernel:[1,2,1,2,4,2,1,2,1],divisor:16,bias:0},
   edge:{name:"라플라시안",kernel:[-1,-1,-1,-1,8,-1,-1,-1,-1],divisor:1,bias:0},
@@ -107,4 +107,14 @@ export function compareImages(actual,target,gain=4) {
   }
   const pixels=actual.width*actual.height;
   return {mae:channels?absolute/channels:0,rmse:channels?Math.sqrt(squared/channels):0,bias:channels?signed/channels:0,max,channels,alphaMae:alphaError/pixels,changedPixels:changed,pixels,heatmap};
+}
+export function histogram(image,channel="gray") {
+  validateImage(image);
+  if(!["gray","r","g","b","alpha"].includes(channel))throw new RangeError("히스토그램 채널을 확인하세요.");
+  const bins=new Uint32Array(256),offset={r:0,g:1,b:2,alpha:3}[channel];let pixels=0;
+  for(let i=0;i<image.data.length;i+=4) {
+    if(channel!=="alpha"&&image.data[i+3]===0)continue;
+    bins[channel==="gray"?luminance(image.data,i):image.data[i+offset]]++;pixels++;
+  }
+  return {bins,pixels};
 }

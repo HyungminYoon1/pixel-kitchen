@@ -26,3 +26,10 @@ canvas{width:100%;height:auto;display:block;border:1px solid #555;cursor:crossha
 @media(max-width:760px){header{padding:1rem;flex-wrap:wrap}.logo{font-size:.875rem}nav{gap:.75rem}main{padding:1rem}.desk{grid-template-columns:1fr}.recipe{border-right:0;border-bottom:1px solid var(--line)}.kernel,.number-row{max-width:300px}.presets{grid-template-columns:repeat(3,1fr)}.image-work{padding:.75rem}.inspect-body{gap:.5rem}.compare-work{padding:.75rem}footer{flex-direction:column}}
 @media(max-width:440px){.canvases{grid-template-columns:1fr}.presets{grid-template-columns:1fr 1fr}.compare-controls{grid-template-columns:1fr}.challenge-controls{align-items:stretch}.challenge-controls label{flex-basis:100%}.challenge-controls label:nth-child(2){flex:1 1 100%}.file-actions>*{flex:1 1 auto}.scoreboard{padding:.75rem}}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+.saved-recipes,.histogram-work{margin-top:1rem;border-top:1px solid var(--line);padding-top:1rem}.saved-recipes>label{display:block;margin-top:.6rem}
+.file-button:has(input:disabled){opacity:.5;cursor:default}
+.preview-controls{display:flex;align-items:end;gap:.6rem;margin-bottom:1rem}.preview-controls>label{flex:1;max-width:240px}
+.image-work:not([data-preview=all]) .canvases{grid-template-columns:1fr}
+.image-work[data-preview=comparison] .canvases{display:none}
+#histogram{cursor:default;image-rendering:auto;background:#181818}
+@media(max-width:760px){.image-work{order:-1}.recipe{border-top:1px solid var(--line)}.preview-controls{position:sticky;top:0;z-index:1;padding:.5rem;background:#242424}.preview-controls>label{max-width:none}}

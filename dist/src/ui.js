@@ -27,5 +27,7 @@ export function tool(name,description,properties,execute,readOnly=false) {
 }
 export function canvasPointer(canvas,event) {
   const r=canvas.getBoundingClientRect();
-  return {x:(event.clientX-r.left)*canvas.width/r.width,y:(event.clientY-r.top)*canvas.height/r.height};
+  const style=getComputedStyle(canvas),left=parseFloat(style.borderLeftWidth)||0,top=parseFloat(style.borderTopWidth)||0;
+  const width=r.width-left-(parseFloat(style.borderRightWidth)||0),height=r.height-top-(parseFloat(style.borderBottomWidth)||0);
+  return {x:Math.floor((event.clientX-r.left-left)*canvas.width/width),y:Math.floor((event.clientY-r.top-top)*canvas.height/height)};
 }

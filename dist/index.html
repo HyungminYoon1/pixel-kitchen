@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="description" content="사진과 픽셀을 직접 가공하는 브라우저 이미지 실험실. 필터와 3×3 행렬을 바꾸고 계산 과정을 살펴보세요." />
+  <meta name="description" content="목표 이미지의 처리 과정을 복원하고, 커널·Sobel·문턱값을 연결하는 로컬 픽셀 실험실." />
   <meta name="theme-color" content="#242424" /><meta name="referrer" content="no-referrer" />
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; connect-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none'" />
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23242424'/%3E%3Cpath d='M6 6h9v9H6zm11 0h9v9h-9zM6 17h9v9H6zm11 0h9v9h-9z' fill='%23ff813a'/%3E%3C/svg%3E" />
@@ -11,19 +11,40 @@
 <body>
   <header><a class="logo" href="./"><span class="mark">P×</span>PIXEL KITCHEN</a><nav><a href="https://hyungminyoon1.github.io/web-lab/">WEB LAB</a><a href="https://github.com/HyungminYoon1/pixel-kitchen" target="_blank" rel="noopener noreferrer">코드</a></nav></header>
   <main>
-    <section class="work-title"><div><p class="eyebrow">IMAGE / PIXEL / CONVOLUTION</p><h1>사진을 픽셀부터 요리하기.</h1><p>필터를 고르고, 숫자를 바꾸고, 이미지의 한 점을 눌러보세요.</p></div><div class="file-actions"><label class="file-button" for="image-file">내 사진 열기<input id="image-file" type="file" accept="image/png,image/jpeg,image/webp" /></label><button id="sample">샘플 복원</button><button class="primary" id="export">PNG 저장</button></div></section>
-    <p class="status" id="status" role="status">사진은 이 브라우저 안에서만 처리됩니다. PNG·JPEG·WebP, 최대 8 MB.</p>
+    <section class="work-title"><div><p class="eyebrow">RECONSTRUCT / COMPOSE / MEASURE</p><h1>결과에서 레시피를 추론하기.</h1><p>점이 퍼지는 모양, 경계의 부호, 연산의 순서. 픽셀로 가설을 검증하세요.</p></div><div class="file-actions"><label class="file-button" for="image-file">내 사진 열기<input id="image-file" type="file" accept="image/png,image/jpeg,image/webp" /></label><button id="sample">샘플 복원</button><button class="primary" id="export" disabled>최종 PNG 저장</button></div></section>
+    <div class="import-status"><p class="status" id="status" role="status">사진은 이 브라우저 안에서만 처리됩니다. PNG·JPEG·WebP, 최대 8 MB.</p><button id="cancel-import" disabled>사진 읽기 취소</button></div>
+    <section class="challenge-bar" aria-label="실험 모드와 복원 과제">
+      <label>작업 모드<select id="mode"><option value="challenge">복원 과제</option><option value="lab">자유 처리 실험실</option></select></label>
+      <div id="challenge-panel">
+        <div class="challenge-controls"><label>진행 단계<select id="level"></select></label><label>재현 시드<input id="seed" type="number" min="0" max="999999" step="1" value="17" /></label><button id="new-seed">시드로 처음부터</button><button id="next" disabled>다음 과제 →</button></div>
+        <p class="small" id="seed-label"></p><p id="brief"></p><p class="small" id="goal"></p><button id="hint">추론 단서 보기</button><p class="small" id="hint-text"></p>
+      </div>
+    </section>
     <div class="desk">
       <aside class="recipe">
-        <h2>01 / 필터 레시피</h2><div class="presets" id="presets"></div>
-        <label class="check"><input type="checkbox" id="gray" /> 흑백으로 계산</label>
-        <h2>02 / 직접 만든 3×3 필터</h2><div class="kernel" id="kernel"></div>
-        <div class="number-row"><label>나누기<input id="divisor" type="number" min="0.1" max="64" step="0.1" value="1" /></label><label>밝기 더하기<input id="bias" type="number" min="-255" max="255" step="1" value="0" /></label></div>
-        <button class="wide" id="custom">내 필터 적용</button><p class="small">주변 9개 픽셀에 각 숫자를 곱해 더한 뒤, 나누기와 밝기를 적용합니다.</p>
+        <div class="inspect-heading"><h2>01 / 처리 순서</h2><span id="stage-count"></span></div>
+        <div id="stage-list" class="stage-list" aria-label="편집할 처리 단계"></div>
+        <div class="stage-actions"><button id="up" aria-label="단계 위로">↑</button><button id="down" aria-label="단계 아래로">↓</button><button id="remove">단계 삭제</button></div>
+        <label>추가할 연산<select id="add-kind"><option value="kernel">3×3 커널</option><option value="sobel">Sobel 기울기</option><option value="threshold">문턱값</option></select></label>
+        <div class="stage-actions"><button id="add">단계 추가</button><button id="reset-pipeline">순서 초기화</button></div>
+        <section id="editor" aria-label="현재 단계 설정">
+          <h2 id="editor-title"></h2><p class="small" id="draft-label"></p>
+          <div id="kernel-editor"><div class="presets" id="presets"></div><label class="check"><input type="checkbox" id="gray" /> 이 단계 입력을 흑백으로</label><div class="kernel" id="kernel"></div>
+            <div class="number-row"><label>나누기<input id="divisor" type="number" min="0.1" max="64" step="0.1" value="1" required /></label><label>밝기 더하기<input id="bias" type="number" min="-255" max="255" step="1" value="0" required /></label></div>
+            <button id="normalize">계수 합을 나누기로</button><p class="small" id="kernel-info"></p><p class="small">Σ(이웃 × 계수) / 나누기 + 밝기. 단계마다 0–255로 반올림·제한합니다.</p>
+          </div>
+          <div id="sobel-editor" hidden><label>기울기 방향<select id="direction"><option value="x">X / 좌우 변화 (부호)</option><option value="y">Y / 상하 변화 (부호)</option><option value="magnitude">크기 / 두 방향 결합</option></select></label><label>증폭<input id="gain" type="number" min="0.25" max="4" step="0.25" value="1" required /></label><p class="small">흑백 입력으로 Gx·Gy 계산. 방향: G / 4 × 증폭 + 128. 크기: √(Gx²+Gy²) / 4 × 증폭.</p></div>
+          <div id="threshold-editor" hidden><label>문턱값<input id="cutoff" type="number" min="0" max="255" step="1" value="128" required /></label><p class="small">반올림한 Rec.709 밝기가 문턱값 이상이면 255, 작으면 0입니다.</p></div>
+          <button id="custom" class="wide">단계 설정 적용</button>
+        </section>
+        <div class="run-actions"><button id="run" class="primary">파이프라인 실행</button><button id="cancel" disabled>계산 취소</button></div><p class="small" id="progress"></p>
+        <p class="small">최대 4단계 · 40M 연산 예산. 사진은 메모리에만 유지하며, 최대 720×480으로 처리합니다.</p>
       </aside>
       <section class="image-work" aria-label="원본과 가공 결과">
-        <div class="canvases"><figure><figcaption><strong>원본</strong><span id="dimensions"></span></figcaption><canvas id="original" width="600" height="400" aria-label="원본 이미지"></canvas></figure><figure><figcaption><strong>가공 결과</strong><span id="filter-label"></span></figcaption><canvas id="result" width="600" height="400" tabindex="0" aria-label="가공 이미지. 클릭하거나 방향키로 검사할 픽셀을 선택하세요."></canvas></figure></div>
-        <div class="inspector"><div class="inspect-heading"><h2>03 / 한 픽셀의 계산</h2><span id="coordinate"></span></div><div class="inspect-body"><div class="neighborhood" id="neighborhood"></div><div><p class="formula" id="formula"></p><p id="rgb-result"></p><p class="small">가공 결과를 누르면 주변 값과 계산 결과를 확인합니다. 방향키로 픽셀을 이동할 수도 있습니다.</p></div></div></div>
+        <div class="canvases"><figure><figcaption><strong>원본</strong><span id="dimensions"></span></figcaption><canvas id="original" width="192" height="128" aria-label="원본 이미지"></canvas></figure><figure id="target-figure"><figcaption><strong>복원할 목표</strong><span>시드로 합성한 정답 이미지</span></figcaption><canvas id="target" width="192" height="128" tabindex="0" aria-label="목표 이미지. 픽셀 선택"></canvas></figure><figure><figcaption><strong>최종 가공 결과</strong><span id="result-label"></span></figcaption><canvas id="result" width="192" height="128" tabindex="0" aria-label="가공 이미지. 클릭하거나 방향키로 검사할 픽셀을 선택하세요."></canvas></figure><figure id="heat-figure"><figcaption><strong>실제 차이 지도</strong><label>증폭<select id="heat-gain"><option value="1">1×</option><option value="4" selected>4×</option><option value="16">16×</option></select></label></figcaption><canvas id="heatmap" width="192" height="128" aria-label="목표와 최종 결과의 차이 지도"></canvas><p class="small">검정 = 차이 0. 빨강 = 최대 채널 차이 × 증폭, 초록 = 증폭 전 차이. 지도 증폭은 점수를 바꾸지 않습니다.</p></figure></div>
+        <section class="scoreboard" aria-label="계산 오차"><p id="metrics" role="status"></p><p id="feedback"></p><p class="small">MAE: 절대 오차 평균 · RMSE: 제곱 평균의 제곱근. RGB 바이트 기준이며, 둘 다 완전 투명인 픽셀은 RGB에서 제외합니다. 알파 오차는 별도 계산. 지각 품질·통계 검증 점수가 아닙니다.</p></section>
+        <section class="compare-work" aria-label="와이프와 중간 단계 비교"><h2>02 / 경계와 중간 단계 비교</h2><div class="compare-controls"><label>왼쪽 기준<select id="reference"><option value="source">원본</option><option id="reference-target" value="target">목표</option></select></label><label>오른쪽 결과<select id="compare-stage"></select></label></div><canvas id="comparison" width="192" height="128" tabindex="0" aria-label="좌우 와이프 비교. 클릭 또는 방향키로 픽셀 선택"></canvas><label class="wipe-label">비교 경계<input id="wipe" type="range" min="0" max="100" value="50" /></label><p class="small" id="compare-label"></p></section>
+        <div class="inspector"><div class="inspect-heading"><h2>03 / 한 픽셀의 계산</h2><span id="coordinate"></span></div><p id="inspect-stage" class="small"></p><div class="inspect-body"><div class="neighborhood" id="neighborhood"></div><div><p class="formula" id="formula"></p><p id="rgb-result"></p><p class="small">처리 순서에서 검사할 단계를 선택하세요. 그 단계의 실제 입력·출력을 계산합니다. 방향키로 픽셀 이동. 경계는 끝 픽셀 반복, 알파는 유지합니다. 커널은 비선형 sRGB 바이트에 적용하며 투명 픽셀의 RGB도 이웃 계산에 포함됩니다.</p></div></div></div>
       </section>
     </div>
     <footer><span>PIXEL KITCHEN / LOCAL IMAGE WORKSPACE</span><a href="https://setosa.io/ev/image-kernels/" target="_blank" rel="noopener noreferrer">이미지 커널 원리 읽기</a></footer>

@@ -1,5 +1,15 @@
 # Decisions
 
+## D12 — 유효한 시드 적용 후에만 진행 초기화 / 2026-10-13
+
+- Context: 첫 과제 통과 뒤 시드를 비우고 처음부터/다음 과제를 누르면 진행이 막혔습니다. 입력 실패 전에 unlocked를 지우고, 명시적인 적용 시드가 있어도 편집란의 빈 값을 검사했습니다.
+- Options: 빈 값을 시드 0으로 취급; 오류 뒤 무조건 초기화; 새 과제를 검증한 뒤 상태 교체.
+- Decision: 기본 입력과 이미 적용한 숫자 시드를 구분합니다. 새 challenge 생성이 성공한 뒤에만 진행 잠금·작업 버전·화면을 바꿉니다. 시드로 처음부터는 resetProgress를 요청하고, 다음/기존 과제는 적용 시드를 사용합니다. 실패 시 현재 과제·완료 진행·픽셀을 보존합니다.
+- Rationale: 유효하지 않은 입력으로 기존 작업을 잃지 않고 미적용 편집 값이 기존 과제 이동을 막지 않습니다. 시드 0은 여전히 명시적인 유효 값입니다.
+- Affected: dist/src/app.js, dist/index.html, tools/browser-validation.js, tools/browser-audit-20261013.js, docs/verification.md.
+- Review: browser-validation은 수정 전 진행 보존 검사에서 실패, 수정 후 통과했습니다. 계산/레시피/프리셋/버퍼 수명·취소·BFCache 계약과 목표 생성 알고리즘은 유지합니다. 기존 전체 과제/리소스 브라우저 검증을 다시 실행합니다.
+- Learning/provenance: 동일 샘플에서 박스 평균→문턱값과 반대 순서를 비교하고 중간 결과·실제 히스토그램으로 설명하는 절차를 추가합니다. 이미 존재하는 pipeline.test.js의 독립 [0,0,0] 대 [85,85,85] 산술 사례가 비가환성을 검증합니다. 바이트/Canvas 읽기는 [MDN getImageData](https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/getImageData)를 확인했습니다. 분포별 막대 자동 스케일과 코드의 8-bit/alpha 의미는 그대로입니다.
+
 ## D01 — Static, independent implementation
 
 - Context: the user approved implementing all six proposed services and adding them to WEB LAB.

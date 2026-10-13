@@ -1,5 +1,17 @@
 # Verification
 
+## 2026-10-13 시드 보존·순서 비교 — LOCAL / BROWSER_LOCAL
+
+- Bug: 첫 과제 통과 뒤 빈 시드를 적용하면 내부 unlock을 지우고 기존 적용 시드의 다음/과제 이동도 막았습니다. browser-validation.js는 수정 전 진행 보존 assertion 실패; 검증 후 상태 교체로 수정 후 **5 assertions PASS**. 유효 새 시드는 원래처럼 진행을 초기화합니다. UI 변경 YES: 평균/문턱값 순서의 직접 비교 안내 추가.
+- Files: dist/src/app.js, dist/index.html, docs/decisions.md, 이 문서; tools/browser-validation.js, browser-audit-20261013.js, browser-return-20261013.js. source/target/byte 모델·해답·레시피·저장 형식은 변경 없음.
+- Sources: 지정 디렉터리 inventory PARTIAL. architecture.md, README.md, decisions, index.html, app/model/challenges, styles, check, 기존 browser-smoke/limits/bfcache 및 관련 pipeline 테스트 전문 VERIFIED. 남은 저장/레시피 테스트·과거 QA는 선별/전체 검사 실행; .git과 캐시/과거 생성 이미지 전체 읽기는 제외. api-spec.md/requirements.md/저장소 AGENTS 없음; 전달 지침 적용.
+- Node v22.23.2/npm11.12.0: `npm test` **26/26 PASS**. 독립 scalar oracle/20 시드·과제 조합/비가환 순서/예산/iterator 취소/레시피·저장·histogram 전체 검증 유지. `npm run check` PASS (8 public files, pure boundary/UTF8/CRLF).
+- Browser: isolated muted headless Chromium, main loopback /pixel-kitchen/. 기존 browser-smoke **39/39 PASS** (5과제 실제 정답, 틀린 밝기/순서, PNG import/alpha/download, 입력·취소·좌우 실제 pixels, 네트워크/자동 저장 경계). browser-limits **14/14 PASS** (PNG/JPEG/WebP 실제 720×480 축소, 최대4커널37.32M, 초과예산 거절, 단일 decode/취소, 새 시드). 늦은 decode와 >24MP 크기는 명시적 test double입니다.
+- 새 순서 비교 audit **7 assertions PASS**: 같은 샘플의 평균→문턱값 출력 [0,255], 반대 순서 [0,28,57,85,113,142,170,198,227,255], 빈 값 거절/이전 결과 export 차단, 390/320px 넘침 없음, pageerror0. 순서 내용은 기존 독립 산술 테스트와 실제 픽셀 양쪽으로 확인했습니다.
+- BFCache: 별도 음소거 Chrome.exe 브라우저에서 기본 BFCache 금지 flag를 제거하고 실제 local navigation/back 확인, **7 assertions PASS**. pagehide.persisted/pageshow.persisted 모두 true, 빈 미적용 시드와 완료 진행을 버리고 default17로 복귀·hint·실제 과제 재완료. 외부 nav href만 QA DOM에서 /packet-journey/로 매핑했으며 소스/갤러리 변경은 없습니다.
+- Screenshots: 부모 `output/qa-20261013/pixel-kitchen/{desktop,mobile-390,mobile-320}.png`. 자유 실험, 문턱값128→박스 평균9, 두 단계/실제 히스토그램/새 안내 펼침. selectors #order-experiment, #compare-stage, #hist-source, #result, #new-seed. 1440×1000 /390×844 /320×844.
+- Limits: 다른 브라우저·물리 터치·실제25MP decode·기기 메모리 상한·모든 BFCache/접근성 조합은 NOT_RUN. 네이티브 decode 자체는 강제 취소할 수 없습니다. runtime/provider/DB/계정/저장 데이터·갤러리 변경 및 commit/push/deploy 없음. REMOTE_CI/LIVE는 메인 담당.
+
 ## Scope
 
 pixel-kitchen: model source and focused tests, static asset/syntax checks, browser interaction, remote workflow and public site are separate evidence levels. Existing unrelated services remain outside this change.

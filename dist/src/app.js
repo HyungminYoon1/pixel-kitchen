@@ -134,15 +134,18 @@ function configureWorkspace() {
   if(!challenge&&["target","heat"].includes($("#preview-view").value))$("#preview-view").value="result";
   renderPreview();renderHistogram();renderStages();renderEditor();renderLevels();process(false);
 }
-function startChallenge(level=0,seed=Number($("#seed").value)) {
-  if($("#seed").value.trim()===""||!Number.isInteger(seed)||seed<0||seed>999999)throw new RangeError("시드는 정수 0–999999입니다.");
+function startChallenge(level=0,seed,resetProgress=false) {
+  if(seed===undefined){if($("#seed").value.trim()==="")throw new RangeError("시드는 정수 0–999999입니다.");seed=Number($("#seed").value);}
+  if(!Number.isInteger(seed)||seed<0||seed>999999)throw new RangeError("시드는 정수 0–999999입니다.");
+  const nextChallenge=createChallenge(level,seed);
+  if(resetProgress)unlocked=0;
   $("#seed").value=seed;$("#seed-label").textContent=`적용 시드 ${seed}`;
-  importVersion++;invalidate();challenge=createChallenge(level,seed);source=challenge.source;stages=[kernelStage()];active=0;draft=false;attempts=0;previousMae=null;$("#mode").value="challenge";configureWorkspace();
+  importVersion++;invalidate();challenge=nextChallenge;source=challenge.source;stages=[kernelStage()];active=0;draft=false;attempts=0;previousMae=null;$("#mode").value="challenge";configureWorkspace();
 }
 function sample(){importVersion++;invalidate();challenge=null;source=syntheticImage(17,600,400);stages=[kernelStage("sharpen")];active=0;draft=false;$("#mode").value="lab";configureWorkspace();}
 $("#mode").addEventListener("change",()=>{try{$("#mode").value==="lab"?sample():startChallenge(0);}catch(error){status(error.message);}});
 $("#sample").addEventListener("click",sample);
-$("#new-seed").addEventListener("click",()=>{try{unlocked=0;startChallenge(0);}catch(error){status(error.message);}});
+$("#new-seed").addEventListener("click",()=>{try{startChallenge(0,undefined,true);}catch(error){status(error.message);}});
 $("#level").addEventListener("change",()=>{try{const level=Number($("#level").value);if(level>unlocked)throw new RangeError("이전 과제를 먼저 통과하세요.");startChallenge(level,challenge.seed);}catch(error){status(error.message);}});
 $("#next").addEventListener("click",()=>{if(challenge&&challenge.level<unlocked)startChallenge(challenge.level+1,challenge.seed);});
 $("#seed").addEventListener("input",()=>{$("#seed-label").textContent=`적용 시드 ${challenge?.seed??17} · 새 시드 미적용`;});

@@ -12,12 +12,18 @@ export function presetStore(getStorage=()=>globalThis.localStorage) {
   const write=state=>access(storage=>{
     const valid=validatePresets(state),text=JSON.stringify(valid);
     if(new TextEncoder().encode(text).length>MAX_PRESET_BYTES)throw new RangeError("프리셋 저장 한도를 초과했습니다.");
-    storage.setItem(PRESET_KEY,text);return valid;
+    storage.setItem(PRESET_KEY,text);
+    if(storage.getItem(PRESET_KEY)!==text)throw new Error("프리셋 저장을 확인할 수 없습니다.");
+    return valid;
   });
   return {
     read,
     save:recipe=>write(addPreset(read(),recipe)),
     remove:slot=>write(removePreset(read(),slot)),
-    erase:()=>access(storage=>{storage.removeItem(PRESET_KEY);return {version:1,presets:[]};})
+    erase:()=>access(storage=>{
+      storage.removeItem(PRESET_KEY);
+      if(storage.getItem(PRESET_KEY)!==null)throw new Error("프리셋 삭제를 확인할 수 없습니다.");
+      return {version:1,presets:[]};
+    })
   };
 }

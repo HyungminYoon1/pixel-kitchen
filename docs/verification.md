@@ -1,5 +1,7 @@
 # Verification
 
+[2026-10-13 systematic edge cases — new executable tests, red/green evidence, browser scope](edge-cases-20261013.md)
+
 ## 2026-10-13 시드 보존·순서 비교 — LOCAL / BROWSER_LOCAL
 
 - Bug: 첫 과제 통과 뒤 빈 시드를 적용하면 내부 unlock을 지우고 기존 적용 시드의 다음/과제 이동도 막았습니다. browser-validation.js는 수정 전 진행 보존 assertion 실패; 검증 후 상태 교체로 수정 후 **5 assertions PASS**. 유효 새 시드는 원래처럼 진행을 초기화합니다. UI 변경 YES: 평균/문턱값 순서의 직접 비교 안내 추가.

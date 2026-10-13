@@ -1,5 +1,14 @@
 # Decisions
 
+## D13 — Confirm fixed-key preset writes and erase / 2026-10-13
+
+- Context: systematic edge-test expansion is explicitly authorized for this owned app; parent handles release. New executable tests reproduced 3 Node boundary failures.
+- Options: trust return without observing effects / ignore absent samples; redesign storage or scientific model; validate the existing boundary and retain original contracts.
+- Decision: E01 no-op setItem and E02 a replaced valid-but-empty readback were reported as successful saves; E03 no-op removeItem reported erasure. Adapter now verifies exact serialized write or null deletion before reporting success.
+- Rationale: failure reporting and input rejection must match the actual bounded state. No new schema, retention, achievement rule, backend, physics, stimulus or architecture is introduced.
+- Affected files: dist/src/storage.js; test/edge-20261013.test.js; tools/browser-edge-20261013.mjs; docs/edge-cases-20261013.md; docs/verification.md.
+- Review: [matrix and exact commands](edge-cases-20261013.md). Storage readback is synchronous best effort, not atomic multi-tab isolation. Fixtures and local Chrome are distinguished from device/live evidence. Remote CI/live remain NOT_RUN; parent integrates/releases.
+
 ## D12 — 유효한 시드 적용 후에만 진행 초기화 / 2026-10-13
 
 - Context: 첫 과제 통과 뒤 시드를 비우고 처음부터/다음 과제를 누르면 진행이 막혔습니다. 입력 실패 전에 unlocked를 지우고, 명시적인 적용 시드가 있어도 편집란의 빈 값을 검사했습니다.
